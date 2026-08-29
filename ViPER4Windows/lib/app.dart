@@ -23,14 +23,26 @@ const _deepBg = Color(0xFF1A1A2E);
 const _navBg = Color(0xFF0F3460);
 final _log = AppLogger('App');
 
-class ViperApp extends StatelessWidget {
+class ViperApp extends StatefulWidget {
   const ViperApp({super.key});
+
+  @override
+  State<ViperApp> createState() => _ViperAppState();
+}
+
+class _ViperAppState extends State<ViperApp> {
+  Locale? _locale;
+
+  void _setLocale(Locale locale) {
+    setState(() => _locale = locale);
+  }
 
   @override
   Widget build(BuildContext context) {
     return FluentApp(
       title: 'ViPER4Windows',
       debugShowCheckedModeBanner: false,
+      locale: _locale,
       localizationsDelegates: const [
         S.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -50,13 +62,15 @@ class ViperApp extends StatelessWidget {
         ),
         fontFamily: 'Inter',
       ),
-      home: const _Shell(),
+      home: _Shell(onLocaleChanged: _setLocale),
     );
   }
 }
 
 class _Shell extends StatefulWidget {
-  const _Shell();
+  const _Shell({required this.onLocaleChanged});
+
+  final ValueChanged<Locale> onLocaleChanged;
 
   @override
   State<_Shell> createState() => _ShellState();
@@ -263,6 +277,8 @@ class _ShellState extends State<_Shell> with WindowListener {
                   ],
                 ),
               ),
+            _buildLanguageMenu(context),
+            const SizedBox(width: 8),
             _buildMasterToggle(state, l),
             const SizedBox(width: 8),
           ],
@@ -315,6 +331,36 @@ class _ShellState extends State<_Shell> with WindowListener {
             icon: Icon(FluentIcons.info, size: 16.0),
             title: Text(l.navDriverStatus),
             body: const DriverPage(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageMenu(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final isChinese = locale.languageCode == 'zh';
+
+    return Tooltip(
+      message: 'Language / 語言',
+      child: DropDownButton(
+        leading: const Icon(FluentIcons.locale_language, size: 14),
+        title: Text(
+          isChinese ? '中文' : 'English',
+          style: const TextStyle(fontSize: 11),
+        ),
+        items: [
+          MenuFlyoutItem(
+            leading: const Icon(FluentIcons.locale_language, size: 14),
+            text: const Text('繁體中文 / Chinese'),
+            selected: isChinese,
+            onPressed: () => widget.onLocaleChanged(const Locale('zh', 'TW')),
+          ),
+          MenuFlyoutItem(
+            leading: const Icon(FluentIcons.locale_language, size: 14),
+            text: const Text('English / 英文'),
+            selected: !isChinese,
+            onPressed: () => widget.onLocaleChanged(const Locale('en')),
           ),
         ],
       ),
